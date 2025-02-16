@@ -1,10 +1,7 @@
 import 'package:csocsort_szamla/components/helpers/ad_unit.dart';
 import 'package:csocsort_szamla/components/user_settings/cards/about_us.dart';
-import 'package:csocsort_szamla/components/user_settings/cards/change_password.dart';
 import 'package:csocsort_szamla/components/user_settings/cards/change_user_currency.dart';
-import 'package:csocsort_szamla/components/user_settings/cards/change_username.dart';
 import 'package:csocsort_szamla/components/user_settings/cards/delete_all_data.dart';
-import 'package:csocsort_szamla/components/user_settings/cards/payment_methods.dart';
 import 'package:csocsort_szamla/components/user_settings/cards/personalised_ads.dart';
 import 'package:csocsort_szamla/components/user_settings/cards/report_bug.dart';
 import 'package:csocsort_szamla/helpers/providers/screen_width_provider.dart';
@@ -75,12 +72,9 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
 
   List<Widget> _settings() {
     return [
-      PaymentMethods(),
-      ChangePassword(),
-      ChangeUsername(),
       ChangeUserCurrency(),
       Selector<UserState, bool>(
-        selector: (context, provider) => provider.user!.showAds,
+        selector: (context, provider) => provider.settings!.showAds,
         builder: (context, showAds, child) => Visibility(
           visible: showAds,
           child: PersonalisedAds(),

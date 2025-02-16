@@ -27,31 +27,14 @@ class AmountDivision {
   factory AmountDivision.fromPurchase(Purchase purchase, VoidCallback setState) {
     AmountDivision amountDivision = AmountDivision(
       amounts: [],
-      currency: purchase.originalCurrency,
+      currency: purchase.currency,
       setState: setState,
-      totalAmount: purchase.totalAmountOriginalCurrency,
+      totalAmount: purchase.amount,
     );
-    for (int i = 0; i < purchase.receivers.length; i++) {
-      Member member = purchase.receivers[i];
-      PurchaseReceiver receiver = PurchaseReceiver.fromMember(
-        member.id,
-        member.nickname,
-        () => amountDivision.setAmount(member.id, false),
-        () => amountDivision.setAmount(member.id, true),
-        () => amountDivision.resetCustom(member.id),
-      );
-      receiver.customAmountController.text = member.balanceOriginalCurrency.toMoneyString(purchase.originalCurrency);
-      receiver.percentageController.text = (member.balanceOriginalCurrency / purchase.totalAmountOriginalCurrency * 100).toInt().toString();
-      if (i != purchase.receivers.length - 1) {
-        receiver.customizedAt = DateTime.now();
-      }
-      amountDivision.amounts.add(receiver);
-    }
-
     return amountDivision;
   }
 
-  factory AmountDivision.fromReceiptInformation(ReceiptInformation information, List<Member> allMembers, VoidCallback setState) {
+  factory AmountDivision.fromReceiptInformation(ReceiptInformation information, VoidCallback setState) {
     final totalAmount = information.items
         .where(
           (element) => element.assignedAmounts.isNotEmpty,
@@ -64,38 +47,6 @@ class AmountDivision {
       setState: setState,
       totalAmount: totalAmount,
     );
-
-    List<int> memberIds = information.items.fold([], (current, item) => [...current, ...item.assignedAmounts.keys]);
-    List<Member> members = allMembers.where((member) => memberIds.contains(member.id)).toList();
-    double assignedAmount = 0;
-    for (int i = 0; i < members.length; i++) {
-      Member member = members[i];
-      PurchaseReceiver receiver = PurchaseReceiver.fromMember(
-        member.id,
-        member.nickname,
-        () => amountDivision.setAmount(member.id, false),
-        () => amountDivision.setAmount(member.id, true),
-        () => amountDivision.resetCustom(member.id),
-      );
-
-      if (i != members.length - 1) {
-        final memberAmount = information.items.fold(
-          0.0,
-          (previousValue, element) {
-            if (element.assignedAmounts.values.sum == 0) return previousValue;
-            return previousValue + (element.assignedAmounts[member.id] ?? 0) / element.assignedAmounts.values.sum * element.cost;
-          },
-        );
-        assignedAmount += memberAmount;
-        receiver.customAmountController.text = memberAmount.toMoneyString(information.currency);
-        receiver.percentageController.text = (memberAmount / totalAmount * 100).toInt().toString();
-        receiver.customizedAt = DateTime.now();
-      } else {
-        receiver.customAmountController.text = (totalAmount - assignedAmount).toMoneyString(information.currency);
-        receiver.percentageController.text = ((totalAmount - assignedAmount) / totalAmount * 100).toInt().toString();
-      }
-      amountDivision.amounts.add(receiver);
-    }
 
     return amountDivision;
   }
@@ -121,21 +72,6 @@ class AmountDivision {
     }
 
     return true;
-  }
-
-  void setMembers(List<Member> members) {
-    List<PurchaseReceiver> toRemove = amounts.where((element) => !members.map((e) => e.id).contains(element.memberId)).toList();
-    List<Member> toAdd = members.where((element) => !this.memberIds.contains(element.id)).toList();
-    assert(
-      !(toRemove.isNotEmpty && toAdd.isNotEmpty),
-      "Only one operation is allowed at a time",
-    );
-    for (PurchaseReceiver memberAmount in toRemove) {
-      removeMember(memberAmount.memberId);
-    }
-    for (Member member in toAdd) {
-      addMember(member.id, member.nickname);
-    }
   }
 
   void addMember(int memberId, String memberNickname, [bool rebuild = true]) {

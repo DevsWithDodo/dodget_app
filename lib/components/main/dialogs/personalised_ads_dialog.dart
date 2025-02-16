@@ -82,7 +82,7 @@ class _PersonalisedAdsDialogState extends State<PersonalisedAdsDialog> {
 
   Future<BoolFutureOutput> _updatePersonalisedAds() async {
     try {
-      if (context.read<UserState>().user!.personalisedAds != _personalisedAds) {
+      if (context.read<UserState>().settings.personalisedAds != _personalisedAds) {
         Map<String, dynamic> body = {"personalised_ads": _personalisedAds ? "on" : "off"};
         await Http.put(uri: '/user', body: body);
         context.read<UserState>().setPersonalisedAds(_personalisedAds);

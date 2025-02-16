@@ -16,7 +16,7 @@
     <application
         tools:replace="android:icon"
         android:name=".Application"
-        android:label="Dodo"
+        android:label="Dodget"
         android:enableOnBackInvokedCallback="true"
         android:icon="@mipmap/dodo_icon">
         <meta-data

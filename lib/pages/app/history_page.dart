@@ -51,7 +51,7 @@ class _HistoryPageState extends State<HistoryPage>
           GetUriKeys.purchases,
           context,
           queryParams: {
-            'group': context.read<UserState>().currentGroup!.id.toString(),
+            'group': context.read<UserState>().group!.id.toString(),
             'from_date': DateFormat('yyyy-MM-dd').format(_startDate),
             'until_date': DateFormat('yyyy-MM-dd').format(_endDate),
             'user_id': _selectedMemberId.toString(),
@@ -96,7 +96,7 @@ class _HistoryPageState extends State<HistoryPage>
           GetUriKeys.payments,
           context,
           queryParams: {
-            'group': context.read<UserState>().currentGroup!.id.toString(),
+            'group': context.read<UserState>().group!.id.toString(),
             'from_date': DateFormat('yyyy-MM-dd').format(_startDate),
             'until_date': DateFormat('yyyy-MM-dd').format(_endDate),
             'user_id': _selectedMemberId.toString(),
@@ -155,8 +155,7 @@ class _HistoryPageState extends State<HistoryPage>
   @override
   void initState() {
     super.initState();
-    _selectedMemberId =
-        widget.selectedMemberId ?? context.read<UserState>().user!.id;
+    _selectedMemberId = 1;
     _tabController = TabController(
         length: 2, vsync: this, initialIndex: widget.startingIndex ?? 0);
     _selectedIndex = widget.startingIndex ?? 0;

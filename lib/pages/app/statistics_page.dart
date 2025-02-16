@@ -35,7 +35,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
 
   DateTime? _startDate = DateTime.now().subtract(Duration(days: 30));
   DateTime _endDate = DateTime.now();
-  Category? _category = Category.fromType(null);
+  Category? _category = null;
 
   void refreshStatistics() {
     _paymentStats = _getStats(StatisticsType.payments);
@@ -102,7 +102,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
             }
             return BarTooltipItem(
               value.toMoneyString(
-                context.read<UserState>().currentGroup!.currency,
+                context.read<UserState>().group!.currency,
                 withSymbol: true,
               ),
               Theme.of(context).textTheme.bodySmall!.copyWith(color: color),
@@ -123,7 +123,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
             }
             return BarTooltipItem(
               value.toMoneyString(
-                context.read<UserState>().currentGroup!.currency,
+                context.read<UserState>().group!.currency,
                 withSymbol: true,
               ),
               Theme.of(context).textTheme.bodySmall!.copyWith(color: color),
@@ -201,7 +201,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
           axisNameSize: 22,
           axisNameWidget: Text(
             'amount'.tr() +
-                ' (${context.watch<UserState>().currentGroup!.currency.symbol})',
+                ' (${context.watch<UserState>().group!.currency.symbol})',
           ),
           sideTitles: SideTitles(
             reservedSize: 50,
@@ -212,7 +212,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                   ? Container()
                   : Text(
                       value.abs().toMoneyString(
-                            context.watch<UserState>().currentGroup!.currency,
+                            context.watch<UserState>().group!.currency,
                           ),
                       style: Theme.of(context).textTheme.bodySmall!.copyWith(
                           color:

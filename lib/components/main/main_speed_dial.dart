@@ -1,4 +1,3 @@
-import 'package:csocsort_szamla/pages/app/payment_page.dart';
 import 'package:csocsort_szamla/pages/app/purchase_page.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -25,18 +24,6 @@ class _MainPageSpeedDialState extends State<MainPageSpeedDial> {
       icon: Icons.add,
       curve: Curves.bounceIn,
       children: [
-        MainSpeedDialChild(
-          context,
-          onTap: () async {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => PaymentPage()),
-            );
-            widget.onReturn?.call();
-          },
-          label: 'speed-dial.payment',
-          icon: Icons.payments,
-        ),
         MainSpeedDialChild(
           context,
           onTap: () async {

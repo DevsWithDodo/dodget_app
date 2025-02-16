@@ -1,14 +1,12 @@
 import 'package:csocsort_szamla/components/helpers/segmented_progress_indicator.dart';
 import 'package:csocsort_szamla/helpers/color_generation.dart';
 import 'package:csocsort_szamla/helpers/currencies.dart';
-import 'package:csocsort_szamla/helpers/models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class ReceiptItemAssigner extends StatefulWidget {
   const ReceiptItemAssigner({
     super.key,
-    required this.member,
     required this.color,
     required this.surfaceColor,
     required this.assignedQuantity,
@@ -19,7 +17,6 @@ class ReceiptItemAssigner extends StatefulWidget {
     required this.currency,
   });
 
-  final Member member;
   final Color color;
   final Color surfaceColor;
   final int assignedQuantity;
@@ -144,7 +141,7 @@ class _ReceiptItemAssignerState extends State<ReceiptItemAssigner> with SingleTi
                         height: 40,
                         child: Center(
                           child: Text(
-                            widget.member.nickname.substring(0, widget.member.nickname.length < 2 ? null : 2),
+                            "todo",
                             style: TextStyle(
                               color: determineTextColor(widget.color),
                               fontSize: 18,

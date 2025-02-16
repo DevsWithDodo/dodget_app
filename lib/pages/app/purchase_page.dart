@@ -10,7 +10,6 @@ import 'package:csocsort_szamla/components/helpers/custom_choice_chip.dart';
 import 'package:csocsort_szamla/components/helpers/error_message.dart';
 import 'package:csocsort_szamla/components/helpers/future_output_dialog.dart';
 import 'package:csocsort_szamla/components/helpers/gradient_button.dart';
-import 'package:csocsort_szamla/components/helpers/member_chips.dart';
 import 'package:csocsort_szamla/components/purchase/custom_amount_field.dart';
 import 'package:csocsort_szamla/helpers/amount_division.dart';
 import 'package:csocsort_szamla/helpers/currencies.dart';
@@ -19,7 +18,6 @@ import 'package:csocsort_szamla/helpers/http.dart';
 import 'package:csocsort_szamla/helpers/models.dart';
 import 'package:csocsort_szamla/helpers/providers/user_provider.dart';
 import 'package:csocsort_szamla/helpers/validation_rules.dart';
-import 'package:csocsort_szamla/pages/app/receipt_scanner_page.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
@@ -31,10 +29,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showcaseview/showcaseview.dart';
 
 class PurchasePage extends StatefulWidget {
-  final ShoppingRequest? shoppingData;
   final Purchase? purchase;
 
-  PurchasePage({this.purchase, this.shoppingData});
+  PurchasePage({this.purchase});
 
   @override
   _PurchasePageState createState() => _PurchasePageState();
@@ -47,7 +44,6 @@ class _PurchasePageState extends State<PurchasePage> {
   ExpandableController _expandableController = ExpandableController();
   bool useCustomAmounts = false;
 
-  late Future<List<Member>> members;
   TextEditingController amountController = TextEditingController();
   TextEditingController noteController = TextEditingController();
   late AmountDivision amountDivision;
@@ -67,7 +63,7 @@ class _PurchasePageState extends State<PurchasePage> {
     try {
       Map<String, dynamic> body = {
         "name": noteController.text,
-        "group": context.read<UserState>().currentGroup!.id,
+        "group": context.read<UserState>().group!.id,
         "amount": amountDivision.totalAmount,
         "currency": selectedCurrency,
         "category": selectedCategory != null ? selectedCategory!.text : null,
@@ -85,56 +81,23 @@ class _PurchasePageState extends State<PurchasePage> {
     }
   }
 
-  Future<List<Member>> getMembers({bool overwriteCache = false}) async {
-    try {
-      Response response = await Http.get(
-        uri: generateUri(GetUriKeys.groupCurrent, context),
-        overwriteCache: overwriteCache,
-      );
-
-      Map<String, dynamic> decoded = jsonDecode(response.body);
-      List<Member> members = [];
-      for (var member in decoded['data']['members']) {
-        members.add(Member(nickname: member['nickname'], balance: (member['balance'] * 1.0), username: member['username'], id: member['user_id']));
-      }
-      return members;
-    } catch (_) {
-      throw _;
-    }
-  }
-
   @override
   void initState() {
     super.initState();
-    final user = context.read<UserState>().user!;
-    selectedCurrency = user.group!.currency;
+    selectedCurrency = context.read<UserState>().group!.currency;
     amountDivision = AmountDivision(
       amounts: [],
       currency: selectedCurrency,
       setState: () => setState(() {}),
     );
-    members = getMembers();
-    purchaserId = user.id;
 
     if (widget.purchase != null) {
       noteController.text = widget.purchase!.name;
-      amountController.text = widget.purchase!.totalAmountOriginalCurrency.toMoneyString(widget.purchase!.originalCurrency);
-      selectedCurrency = widget.purchase!.originalCurrency;
+      amountController.text = widget.purchase!.amount.toMoneyString(widget.purchase!.currency);
+      selectedCurrency = widget.purchase!.currency;
       selectedCategory = widget.purchase!.category;
-      purchaserId = widget.purchase!.buyerId;
       amountDivision = AmountDivision.fromPurchase(widget.purchase!, () => setState(() {}));
-      if (widget.purchase!.receivers.every((element) => element.balance == widget.purchase!.receivers.first.balance)) {
-        useCustomAmounts = false;
-      } else {
-        useCustomAmounts = true;
-      }
-    } else if (widget.shoppingData != null) {
-      noteController.text = widget.shoppingData!.name;
-      amountDivision.addMember(
-        widget.shoppingData!.requesterId,
-        widget.shoppingData!.requesterNickname,
-        false,
-      );
+      useCustomAmounts = false;
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -171,73 +134,6 @@ class _PurchasePageState extends State<PurchasePage> {
                       constraints: BoxConstraints(maxWidth: 500),
                       child: Column(
                         children: <Widget>[
-                          FutureBuilder(
-                            future: members,
-                            builder: (context, snapshot) {
-                              if (!snapshot.hasData) {
-                                return Container();
-                              }
-                              return Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  GradientButton.icon(
-                                    icon: Icon(Icons.receipt),
-                                    label: Text('purchase.scan-receipt.${receiptInformation == null ? 'new' : 'modify'}'.tr()),
-                                    onPressed: () => Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => ReceiptScannerPage(
-                                          initialInformation: receiptInformation,
-                                          members: snapshot.data!,
-                                          onReceiptInformationReady: (information) {
-                                            setState(() {
-                                              selectedCurrency = information.currency;
-                                              noteController.text = information.storeName;
-                                              amountController.text = information.items
-                                                  .where(
-                                                    (element) => element.assignedAmounts.isNotEmpty,
-                                                  )
-                                                  .map((e) => e.cost)
-                                                  .fold(0.0, (previousValue, element) => previousValue + element)
-                                                  .toMoneyString(selectedCurrency);
-                                              amountDivision = AmountDivision.fromReceiptInformation(
-                                                information,
-                                                snapshot.data!,
-                                                () => setState(() {}),
-                                              );
-                                              useCustomAmounts = true;
-                                              receiptInformation = information;
-                                            });
-                                            Navigator.pop(context);
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  if (receiptInformation != null)
-                                    Padding(
-                                      padding: EdgeInsets.only(left: 10),
-                                      child: IconButton.outlined(
-                                        onPressed: () => setState(() {
-                                          receiptInformation = null;
-                                          amountDivision = AmountDivision(
-                                            amounts: [],
-                                            currency: selectedCurrency,
-                                            setState: () => setState(() {}),
-                                          );
-                                          noteController.text = "";
-                                          amountController.text = "";
-                                          selectedCurrency = context.read<UserState>().user!.group!.currency;
-                                          useCustomAmounts = false;
-                                        }),
-                                        icon: Icon(Icons.delete),
-                                      ),
-                                    )
-                                ],
-                              );
-                            },
-                          ),
-                          SizedBox(height: 20),
                           Row(
                             children: [
                               Expanded(
@@ -365,96 +261,6 @@ class _PurchasePageState extends State<PurchasePage> {
                             ],
                           ),
                           SizedBox(height: 20),
-                          Center(
-                            child: FutureBuilder(
-                              future: members,
-                              builder: (context, AsyncSnapshot<List<Member>> snapshot) {
-                                if (snapshot.connectionState == ConnectionState.done) {
-                                  if (snapshot.hasData) {
-                                    return Row(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Column(
-                                          children: [
-                                            SizedBox(
-                                              height: 5,
-                                            ),
-                                            Text(
-                                              'from_who'.tr(),
-                                              style: Theme.of(context).textTheme.labelLarge,
-                                            ),
-                                          ],
-                                        ),
-                                        Expanded(
-                                          child: Center(
-                                            child: AnimatedCrossFade(
-                                              duration: Duration(milliseconds: 300),
-                                              reverseDuration: Duration(seconds: 0),
-                                              crossFadeState: purchaserCrossFadeState,
-                                              firstChild: Visibility(
-                                                visible: purchaserCrossFadeState == CrossFadeState.showFirst,
-                                                child: CustomChoiceChip(
-                                                  enabled: false,
-                                                  selected: true,
-                                                  showCheck: false,
-                                                  showAnimation: true,
-                                                  selectedColor: Theme.of(context).colorScheme.secondaryContainer,
-                                                  selectedFontColor: Theme.of(context).colorScheme.onSecondaryContainer,
-                                                  notSelectedColor: Theme.of(context).colorScheme.surface,
-                                                  notSelectedFontColor: Theme.of(context).colorScheme.onSurface,
-                                                  fillRatio: 1,
-                                                  member: snapshot.data!.firstWhere((element) => element.id == purchaserId),
-                                                  onSelected: (chosen) {},
-                                                ),
-                                              ),
-                                              secondChild: MemberChips(
-                                                allMembers: snapshot.data!,
-                                                multiple: false,
-                                                showAnimation: false,
-                                                chosenMemberIds: snapshot.data!
-                                                    .where(
-                                                      (element) => element.id == purchaserId,
-                                                    )
-                                                    .map((e) => e.id)
-                                                    .toList(),
-                                                setChosenMemberIds: (newMemberIds) => setState(() {
-                                                  purchaserCrossFadeState = CrossFadeState.showFirst;
-                                                  if (newMemberIds.isNotEmpty) {
-                                                    purchaserId = newMemberIds.first;
-                                                  }
-                                                }),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        IconButton(
-                                          onPressed: () => setState(() {
-                                            if (purchaserCrossFadeState == CrossFadeState.showFirst) {
-                                              purchaserCrossFadeState = CrossFadeState.showSecond;
-                                            } else {
-                                              purchaserCrossFadeState = CrossFadeState.showFirst;
-                                            }
-                                          }),
-                                          icon: Icon(
-                                            purchaserCrossFadeState == CrossFadeState.showSecond ? Icons.arrow_drop_up : Icons.arrow_drop_down,
-                                            color: purchaserCrossFadeState == CrossFadeState.showSecond ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant,
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  }
-                                  return ErrorMessage(
-                                    error: snapshot.error.toString(),
-                                    errorLocation: 'add_purchase',
-                                    onTap: () => setState(() => members = getMembers()),
-                                  );
-                                }
-                                return CircularProgressIndicator();
-                              },
-                            ),
-                          ),
-                          SizedBox(height: 20),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -491,37 +297,6 @@ class _PurchasePageState extends State<PurchasePage> {
                               ),
                             ),
                           ),
-                          SizedBox(height: 10),
-                          FutureBuilder(
-                              future: members,
-                              builder: (context, snapshot) {
-                                if (snapshot.connectionState != ConnectionState.done) {
-                                  return Center(child: CircularProgressIndicator());
-                                }
-                                if (snapshot.hasError) {
-                                  return Center(child: Text('Error: ${snapshot.error}'));
-                                }
-                                return MemberChips(
-                                  multiple: true,
-                                  allMembers: snapshot.data!,
-                                  chosenMemberIds: amountDivision.memberIds,
-                                  setChosenMemberIds: (memberIds) => setState(
-                                    () => amountDivision.setMembers(
-                                      snapshot.data!.where((element) => memberIds.contains(element.id)).toList(),
-                                    ),
-                                  ),
-                                  allowCustomAmounts: true,
-                                  fullAmount: amountDivision.totalAmount,
-                                  customAmounts: useCustomAmounts
-                                      ? Map.fromEntries(amountDivision.amounts.map(
-                                          (e) => MapEntry(
-                                            e.memberId,
-                                            e.parsedAmount ?? 0,
-                                          ),
-                                        ))
-                                      : {},
-                                );
-                              }),
                           SizedBox(height: 10),
                           if (!useCustomAmounts && amountDivision.amounts.isNotEmpty)
                             Center(

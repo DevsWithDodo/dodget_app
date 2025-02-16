@@ -1,9 +1,6 @@
-import 'package:csocsort_szamla/components/helpers/add_reaction_dialog.dart';
 import 'package:csocsort_szamla/components/helpers/confirm_choice_dialog.dart';
 import 'package:csocsort_szamla/components/helpers/future_output_dialog.dart';
 import 'package:csocsort_szamla/components/helpers/gradient_button.dart';
-import 'package:csocsort_szamla/components/helpers/reaction_row.dart';
-import 'package:csocsort_szamla/components/helpers/transaction_receivers.dart';
 import 'package:csocsort_szamla/helpers/currencies.dart';
 import 'package:csocsort_szamla/helpers/http.dart';
 import 'package:csocsort_szamla/helpers/models.dart';
@@ -16,9 +13,8 @@ import 'package:provider/provider.dart';
 class PurchaseAllInfo extends StatefulWidget {
   final Purchase purchase;
   final int? selectedMemberId;
-  final Function(String reaction) onSendReaction;
 
-  PurchaseAllInfo(this.purchase, this.selectedMemberId, this.onSendReaction);
+  PurchaseAllInfo(this.purchase, this.selectedMemberId);
 
   @override
   _PurchaseAllInfoState createState() => _PurchaseAllInfoState();
@@ -30,7 +26,7 @@ class _PurchaseAllInfoState extends State<PurchaseAllInfo> {
   @override
   void initState() {
     super.initState();
-    displayCurrency = widget.purchase.originalCurrency;
+    displayCurrency = widget.purchase.currency;
   }
 
   Future<BoolFutureOutput> _deleteElement(int id) async {
@@ -65,7 +61,7 @@ class _PurchaseAllInfoState extends State<PurchaseAllInfo> {
           color: Theme.of(context).colorScheme.onSurfaceVariant,
         );
 
-    Currency groupCurrency = context.select<UserState, Currency>((provider) => provider.currentGroup!.currency);
+    Currency groupCurrency = context.select<UserState, Currency>((provider) => provider.group!.currency);
 
     return DefaultTextStyle(
       style: Theme.of(context).textTheme.bodyLarge!.copyWith(
@@ -76,12 +72,6 @@ class _PurchaseAllInfoState extends State<PurchaseAllInfo> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            ReactionRow(
-              type: ReactionType.purchase,
-              reactToId: widget.purchase.id,
-              onSendReaction: widget.onSendReaction,
-              reactions: widget.purchase.reactions!,
-            ),
             SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -144,7 +134,7 @@ class _PurchaseAllInfoState extends State<PurchaseAllInfo> {
                 ),
                 Flexible(
                   child: Text(
-                    (displayCurrency == widget.purchase.originalCurrency ? widget.purchase.totalAmountOriginalCurrency : widget.purchase.totalAmount).toMoneyString(
+                    (displayCurrency == widget.purchase.currency ? widget.purchase.amount : widget.purchase.amount).toMoneyString(
                       displayCurrency,
                       withSymbol: true,
                     ),
@@ -154,7 +144,7 @@ class _PurchaseAllInfoState extends State<PurchaseAllInfo> {
             ),
             SizedBox(height: 10),
             Visibility(
-              visible: widget.purchase.originalCurrency != groupCurrency,
+              visible: widget.purchase.currency != groupCurrency,
               child: Table(
                   columnWidths: {
                     0: FlexColumnWidth(1),
@@ -167,7 +157,7 @@ class _PurchaseAllInfoState extends State<PurchaseAllInfo> {
                       children: [
                         Center(
                           child: Text(
-                            'info.purchase-currency'.tr(namedArgs: {"currency": widget.purchase.originalCurrency.code}),
+                            'info.purchase-currency'.tr(namedArgs: {"currency": widget.purchase.currency.code}),
                             style: titleStyle,
                             textAlign: TextAlign.center,
                           ),
@@ -176,7 +166,7 @@ class _PurchaseAllInfoState extends State<PurchaseAllInfo> {
                           child: Switch(
                             value: displayCurrency == groupCurrency,
                             onChanged: (value) => setState(() {
-                              displayCurrency = value ? groupCurrency : widget.purchase.originalCurrency;
+                              displayCurrency = value ? groupCurrency : widget.purchase.currency;
                             }),
                           ),
                         ),
@@ -193,22 +183,6 @@ class _PurchaseAllInfoState extends State<PurchaseAllInfo> {
                     ),
                   ]),
             ),
-            SizedBox(height: 15),
-            Builder(builder: (context) {
-              Map<double, List<Member>> groupedReceivers = {};
-              widget.purchase.receivers.forEach((receiver) {
-                if (!groupedReceivers.containsKey(receiver.balanceOriginalCurrency)) {
-                  groupedReceivers[receiver.balanceOriginalCurrency] = [];
-                }
-                groupedReceivers[receiver.balanceOriginalCurrency]!.add(receiver);
-              });
-              return TransactionReceivers(
-                type: TransactionType.purchase,
-                groupedReceivers: groupedReceivers,
-                buyerNickname: widget.purchase.buyerNickname,
-                displayCurrency: displayCurrency,
-              );
-            }),
             SizedBox(
               height: 20,
             ),

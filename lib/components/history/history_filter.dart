@@ -10,7 +10,6 @@ import 'package:http/http.dart';
 import 'package:provider/provider.dart';
 
 import '../../helpers/http.dart';
-import '../helpers/member_chips.dart';
 
 class HistoryFilter extends StatefulWidget {
   final DateTime startDate;
@@ -32,29 +31,11 @@ class HistoryFilter extends StatefulWidget {
 }
 
 class _HistoryFilterState extends State<HistoryFilter> {
-  late Future<List<Member>> _members;
   late int _selectedMemberId;
-
-  Future<List<Member>> _getMembers() async {
-    try {
-      Response response = await Http.get(uri: generateUri(GetUriKeys.groupCurrent, context));
-
-      Map<String, dynamic> decoded = jsonDecode(response.body);
-      List<Member> members = [];
-      for (var member in decoded['data']['members']) {
-        members.add(Member.fromJson(member));
-      }
-      return members;
-    } catch (_) {
-      throw _;
-    }
-  }
 
   @override
   void initState() {
     super.initState();
-    _members = _getMembers();
-    _selectedMemberId = widget.selectedMemberId;
   }
 
   @override
@@ -65,10 +46,7 @@ class _HistoryFilterState extends State<HistoryFilter> {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<UserState, User>(
-        selector: (context, provider) => provider.user!,
-        builder: (context, user, _) {
-          return Container(
+    return Container(
             height: 180,
             child: Material(
               color: Colors.transparent,
@@ -126,46 +104,10 @@ class _HistoryFilterState extends State<HistoryFilter> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 10),
-                  FutureBuilder(
-                    future: _members,
-                    builder: (context, AsyncSnapshot<List<Member>> snapshot) {
-                      if (snapshot.connectionState != ConnectionState.done) {
-                        return Center(child: CircularProgressIndicator());
-                      }
-                      if (!snapshot.hasData) {
-                        return ErrorMessage(
-                          error: snapshot.error.toString(),
-                          onTap: () => setState(() => _members = _getMembers()),
-                          errorLocation: 'history_filter',
-                        );
-                      }
-                      return Center(
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: MemberChips(
-                            allMembers: snapshot.data!,
-                            chosenMemberIds:
-                                snapshot.data!.where((element) => element.id == _selectedMemberId).map((e) => e.id).toList(),
-                            setChosenMemberIds: (newMembersChosen) {
-                              if (newMembersChosen.isNotEmpty) {
-                                widget.onValuesChanged(selectedMemberId: newMembersChosen.first);
-                                setState(() {
-                                  _selectedMemberId = newMembersChosen.first;
-                                });
-                              }
-                            },
-                            multiple: false,
-                            showAnimation: false,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+                  
                 ],
               ),
             ),
           );
-        });
   }
 }

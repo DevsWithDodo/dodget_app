@@ -22,7 +22,7 @@ class _ChangeUserCurrencyDialogState extends State<ChangeUserCurrencyDialog> {
   @override
   void initState() {
     super.initState();
-    _currency = context.read<UserState>().user!.currency;
+    _currency = context.read<UserState>().group.currency;
   }
 
   Future<BoolFutureOutput> _updateUserCurrency(String currency) async {

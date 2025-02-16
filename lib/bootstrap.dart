@@ -4,9 +4,6 @@ import 'package:csocsort_szamla/helpers/providers/app_config_provider.dart';
 import 'package:csocsort_szamla/helpers/providers/user_provider.dart';
 import 'package:csocsort_szamla/helpers/providers/app_theme_provider.dart';
 import 'package:csocsort_szamla/helpers/initializers/exchange_rate_initializer.dart';
-import 'package:csocsort_szamla/helpers/initializers/in_app_purchase_initializer.dart';
-import 'package:csocsort_szamla/helpers/providers/invite_url_provider.dart';
-import 'package:csocsort_szamla/helpers/initializers/notification_initializer.dart';
 import 'package:csocsort_szamla/helpers/providers/screen_width_provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -43,36 +40,28 @@ class _BootstrapState extends State<Bootstrap> {
             create: (context) => snapshot.data!,
             builder: (context, child) => AppThemeProvider(
                 context: context,
-                builder: (context) => InviteUrlProvider(
-                  builder: (context) => ExchangeRateInitializer(
+                builder: (context) => ExchangeRateInitializer(
                     context: context,
                     builder: (context) => UserProvider(
                       context: context,
-                      builder: (context) => NotificationInitializer(
-                        context: context,
-                        builder: (context) => IAPInitializer(
-                          context: context,
-                          builder: (context) => ScreenSizeProvider(
-                            builder: (context) => EasyLocalization(
-                              child: ShowCaseWidget(
-                                builder: (context) => SupportedVersionInitializer(
-                                  builder: (context) => App(),
-                                ),
+                      builder: (context) => ScreenSizeProvider(
+                          builder: (context) => EasyLocalization(
+                            child: ShowCaseWidget(
+                              builder: (context) => SupportedVersionInitializer(
+                                builder: (context) => App(),
                               ),
-                              supportedLocales: [Locale('en'), Locale('de'), Locale('hu')],
-                              path: 'assets/translations',
-                              fallbackLocale: Locale('en'),
-                              useOnlyLangCode: true,
-                              saveLocale: true,
-                              useFallbackTranslations: true,
                             ),
+                            supportedLocales: [Locale('en'), Locale('de'), Locale('hu')],
+                            path: 'assets/translations',
+                            fallbackLocale: Locale('en'),
+                            useOnlyLangCode: true,
+                            saveLocale: true,
+                            useFallbackTranslations: true,
                           ),
-                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
           );
         },
       ),

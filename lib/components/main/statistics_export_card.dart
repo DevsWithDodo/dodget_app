@@ -5,7 +5,6 @@ import 'package:csocsort_szamla/helpers/event_bus.dart';
 import 'package:csocsort_szamla/components/helpers/error_message.dart';
 import 'package:csocsort_szamla/components/helpers/gradient_button.dart';
 import 'package:csocsort_szamla/components/main/dialogs/download_export_dialog.dart';
-import 'package:csocsort_szamla/pages/app/store_page.dart';
 import 'package:csocsort_szamla/pages/app/statistics_page.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -55,22 +54,7 @@ class _StatisticsDataExportState extends State<StatisticsDataExport> {
                         .copyWith(color: Theme.of(context).colorScheme.onSurface),
                     textAlign: TextAlign.center),
                 SizedBox(height: 15),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    GradientButton(
-                      child: ColorFiltered(
-                          colorFilter: ColorFilter.mode(Theme.of(context).colorScheme.onPrimary, BlendMode.srcIn),
-                          child: Image.asset(
-                            'assets/dodo.png',
-                            width: 25,
-                          )),
-                      onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => StorePage()));
-                      },
-                    ),
-                  ],
-                )
+                
               ],
             ),
           ),

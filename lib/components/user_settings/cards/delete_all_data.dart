@@ -84,8 +84,6 @@ class _DeleteAllDataState extends State<DeleteAllData> {
                                 );
                                 UserState userProvider = context.read<UserState>();
                                 userProvider.setGroup(null);
-                                userProvider.setGroups([]);
-                                userProvider.setUser(null);
                                 var prefs = await SharedPreferences.getInstance();
                                 await prefs.remove('current_username');
                               },

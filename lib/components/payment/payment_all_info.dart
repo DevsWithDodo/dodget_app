@@ -1,13 +1,7 @@
-import 'package:csocsort_szamla/components/helpers/add_reaction_dialog.dart';
-import 'package:csocsort_szamla/components/helpers/confirm_choice_dialog.dart';
 import 'package:csocsort_szamla/components/helpers/future_output_dialog.dart';
-import 'package:csocsort_szamla/components/helpers/gradient_button.dart';
-import 'package:csocsort_szamla/components/helpers/reaction_row.dart';
-import 'package:csocsort_szamla/components/helpers/transaction_receivers.dart';
 import 'package:csocsort_szamla/helpers/currencies.dart';
 import 'package:csocsort_szamla/helpers/http.dart';
 import 'package:csocsort_szamla/helpers/providers/user_provider.dart';
-import 'package:csocsort_szamla/pages/app/payment_page.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -55,7 +49,7 @@ class _PaymentAllInfoState extends State<PaymentAllInfo> {
           color: Theme.of(context).colorScheme.onSurfaceVariant,
         );
 
-    Currency groupCurrency = context.select<UserState, Currency>((provider) => provider.currentGroup!.currency);
+    Currency groupCurrency = context.select<UserState, Currency>((provider) => provider.group!.currency);
 
     return DefaultTextStyle(
       style: Theme.of(context).textTheme.bodyLarge!.copyWith(
@@ -66,12 +60,6 @@ class _PaymentAllInfoState extends State<PaymentAllInfo> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            ReactionRow(
-              type: ReactionType.payment,
-              reactToId: widget.payment.id,
-              onSendReaction: widget.onSendReaction,
-              reactions: widget.payment.reactions!,
-            ),
             SizedBox(height: 10),
             Center(
               child: Text(
@@ -137,70 +125,9 @@ class _PaymentAllInfoState extends State<PaymentAllInfo> {
                   ]),
             ),
             SizedBox(height: 15),
-            Builder(
-              builder: (context) {
-                return TransactionReceivers(
-                  type: TransactionType.payment,
-                  buyerNickname: widget.payment.payerNickname,
-                  groupedReceivers: {
-                    widget.payment.amount: [
-                      Member(
-                        id: -1,
-                        nickname: widget.payment.takerNickname,
-                        username: widget.payment.takerUsername,
-                        balance: widget.payment.amount,
-                        balanceOriginalCurrency: widget.payment.amountOriginalCurrency,
-                      )
-                    ]
-                  },
-                  displayCurrency: displayCurrency,
-                );
-              },
-            ),
+            
             SizedBox(height: 25),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                GradientButton.icon(
-                  onPressed: () async {
-                    final modified = await Navigator.push<bool>(
-                      context,
-                      MaterialPageRoute(builder: (context) => PaymentPage(payment: widget.payment)),
-                    );
-                    if (modified ?? false) {
-                      Navigator.pop(context);
-                    }
-                  },
-                  icon: Icon(Icons.edit),
-                  label: Text('modify'.tr()),
-                ),
-                GradientButton.icon(
-                  onPressed: () {
-                    showDialog(
-                      builder: (context) => ConfirmChoiceDialog(
-                        choice: 'confirm-delete',
-                      ),
-                      context: context,
-                    ).then((value) {
-                      if (value ?? false) {
-                        showFutureOutputDialog(
-                          context: context,
-                          future: _deletePayment(widget.payment.id),
-                          outputCallbacks: {
-                            BoolFutureOutput.True: () {
-                              Navigator.pop(context);
-                              Navigator.pop(context, 'deleted');
-                            }
-                          },
-                        );
-                      }
-                    });
-                  },
-                  icon: Icon(Icons.delete),
-                  label: Text('delete'.tr()),
-                )
-              ],
-            ),
+            
           ],
         ),
       ),

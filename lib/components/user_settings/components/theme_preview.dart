@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:csocsort_szamla/components/balance/balances.dart';
 import 'package:csocsort_szamla/components/purchase/purchase_entry.dart';
-import 'package:csocsort_szamla/components/shopping/shopping_list_entry.dart';
 import 'package:csocsort_szamla/helpers/app_theme.dart';
 import 'package:csocsort_szamla/helpers/currencies.dart';
 import 'package:csocsort_szamla/helpers/models.dart';
@@ -22,47 +20,6 @@ class ThemePreview extends StatefulWidget {
   final ThemeName themeName;
   final Offset offset;
 
-  static final List<Member> _members = [
-    Member(id: 1, username: 'theme-preview.member.1'.tr(), balance: 50),
-    Member(id: 2, username: 'theme-preview.member.2'.tr(), balance: 0),
-    Member(id: 3, username: 'theme-preview.member.3'.tr(), balance: -50),
-  ];
-
-  static final List<Purchase> _purchases = [
-    Purchase.example('theme-preview.purchase.1'.tr(), 15,
-        Currency.fromCode('EUR'), _members[0], _members),
-    Purchase.example('theme-preview.purchase.2'.tr(), 10,
-        Currency.fromCode('USD'), _members[1], _members),
-    Purchase.example('theme-preview.purchase.3'.tr(), 25,
-        Currency.fromCode('EUR'), _members[0], [_members[1], _members[2]]),
-  ];
-
-  static final List<ShoppingRequest> _requests = [
-    ShoppingRequest(
-      id: 1,
-      name: 'theme-preview.request.1'.tr(),
-      requesterId: _members[0].id,
-      requesterNickname: _members[0].nickname,
-      updatedAt: DateTime.now(),
-      reactions: [],
-    ),
-    ShoppingRequest(
-      id: 2,
-      name: 'theme-preview.request.2'.tr(),
-      requesterId: _members[1].id,
-      requesterNickname: _members[1].nickname,
-      updatedAt: DateTime.now(),
-      reactions: [],
-    ),
-    ShoppingRequest(
-      id: 3,
-      name: 'theme-preview.request.3'.tr(),
-      requesterId: _members[2].id,
-      requesterNickname: _members[2].nickname,
-      updatedAt: DateTime.now(),
-      reactions: [],
-    ),
-  ];
 
   @override
   State<ThemePreview> createState() => _ThemePreviewState();
@@ -195,13 +152,6 @@ class ThemePreviewContent extends StatelessWidget {
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                         SizedBox(height: 15),
-                        ...ThemePreview._members.map(
-                          (member) => BalanceMemberEntry(
-                            member: member,
-                            selectedCurrency:
-                                context.watch<UserState>().currentGroup!.currency,
-                          ),
-                        )
                       ],
                     ),
                   ),
@@ -217,36 +167,11 @@ class ThemePreviewContent extends StatelessWidget {
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                         SizedBox(height: 15),
-                        ...ThemePreview._purchases.map((purchase) =>
-                            PurchaseEntry(
-                                purchase: purchase,
-                                selectedMemberId: ThemePreview._members[0].id))
                       ],
                     ),
                   ),
                 ),
-                Card(
-                  child: Padding(
-                    padding: EdgeInsets.all(8),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'shopping_list'.tr(),
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        SizedBox(height: 15),
-                        ...ThemePreview._requests.map(
-                          (request) => ShoppingListEntry(
-                            shoppingRequest: request,
-                            onDeleteRequest: (_) {},
-                            onEditRequest: (_) {},
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
-                ),
+
               ],
             ),
           ),

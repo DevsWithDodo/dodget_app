@@ -92,7 +92,7 @@ class Legend extends StatelessWidget {
                 Flexible(
                   child: Text(
                     sums[index].toMoneyString(
-                        context.watch<UserState>().currentGroup!.currency,
+                        context.watch<UserState>().group!.currency,
                         withSymbol: true),
                     style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant),

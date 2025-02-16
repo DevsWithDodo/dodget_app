@@ -29,7 +29,7 @@ class _CustomAmountDialogState extends State<CustomAmountDialog> {
   void initState() {
     super.initState();
     sliderValue = widget.initialValue;
-    currency = widget.currency ?? context.read<UserState>().currentGroup!.currency;
+    currency = widget.currency ?? context.read<UserState>().group!.currency;
     customAmountController.text = sliderValue.toMoneyString(currency);
   }
 

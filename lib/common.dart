@@ -13,7 +13,7 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
-double adHeight(BuildContext context) => (context.read<AppConfig>().isAdPlatformEnabled && (context.read<UserState>().user?.showAds ?? false)) ? 50 : 0;
+double adHeight(BuildContext context) => (context.read<AppConfig>().isAdPlatformEnabled && (context.read<UserState>().settings?.showAds ?? false)) ? 50 : 0;
 
 /// The delay time in ms for the success dialog to pop.
 int delayTime = 700;

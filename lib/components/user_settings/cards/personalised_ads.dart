@@ -17,12 +17,12 @@ class _PersonalisedAdsState extends State<PersonalisedAds> {
   @override
   void initState() {
     super.initState();
-    _personalisedAds = context.read<UserState>().user!.personalisedAds;
+    _personalisedAds = context.read<UserState>().settings.personalisedAds;
   }
 
   Future<BoolFutureOutput> _updatePersonalisedAds() async {
     try {
-      if (context.read<UserState>().user!.personalisedAds != _personalisedAds) {
+      if (context.read<UserState>().settings.personalisedAds != _personalisedAds) {
         Map<String, dynamic> body = {
           "personalised_ads": _personalisedAds ? "on" : "off"
         };

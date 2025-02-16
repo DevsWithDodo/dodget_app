@@ -1,18 +1,11 @@
-import 'package:csocsort_szamla/components/auth/forgot_password_dialog.dart';
-import 'package:csocsort_szamla/components/helpers/future_output_dialog.dart';
-import 'package:csocsort_szamla/helpers/providers/app_config_provider.dart';
-import 'package:csocsort_szamla/pages/auth/login/login_pin_page.dart';
-import 'package:csocsort_szamla/pages/auth/sign_up/sign_up_pin_page.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
-import '../../components/helpers/gradient_button.dart';
 import '../../helpers/validation_rules.dart';
 
 class NamePage extends StatefulWidget {
@@ -77,7 +70,6 @@ class _NamePageState extends State<NamePage> {
                                         : []),
                                   ]),
                                   onChanged: (value) => setState(() {}),
-                                  onFieldSubmitted: (value) => _buttonPush(),
                                   controller: _usernameController,
                                   decoration: InputDecoration(
                                     labelText: 'username'.tr(),
@@ -104,36 +96,6 @@ class _NamePageState extends State<NamePage> {
                                   ),
                                 ),
                             ],
-                          ),
-                          Visibility(
-                            visible: false && widget.isLogin,
-                            child: Padding(
-                              padding: EdgeInsets.only(top: 20),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  TextButton(
-                                    onPressed: () {
-                                      showDialog(
-                                          context: context,
-                                          builder: (context) =>
-                                              ForgotPasswordDialog());
-                                    },
-                                    child: Text(
-                                      'forgot_password'.tr(),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelLarge!
-                                          .copyWith(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onSurface),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
                           ),
                           Visibility(
                             visible: !widget.isLogin,
@@ -224,16 +186,6 @@ class _NamePageState extends State<NamePage> {
                       ),
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(30),
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: GradientButton(
-                        child: Icon(Icons.arrow_right),
-                        onPressed: _buttonPush,
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -243,63 +195,4 @@ class _NamePageState extends State<NamePage> {
     );
   }
 
-  void _buttonPush() async {
-    _usernameController.text = _usernameController.text.toLowerCase();
-    if (widget.isLogin) {
-      if (_formKey.currentState!.validate()) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => LoginPinPage(
-              username: _usernameController.text,
-            ),
-          ),
-        );
-      }
-    } else {
-      _usernameTaken = false;
-      _showPrivacyPolicyValidation = false;
-      if (_formKey.currentState!.validate() && _privacyPolicy) {
-        showFutureOutputDialog(
-            context: context,
-            future: _checkUsernameTaken(),
-            outputTexts: {
-              BoolFutureOutput.False: 'username_taken'
-            },
-            outputCallbacks: {
-              BoolFutureOutput.True: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => SignUpPinPage(
-                      username: _usernameController.text,
-                    ),
-                  ),
-                );
-              }
-            });
-      } else if (!_privacyPolicy) {
-        setState(() {
-          _showPrivacyPolicyValidation = true;
-        });
-      }
-    }
-  }
-
-  Future<BoolFutureOutput> _checkUsernameTaken() async {
-    http.Response response = await http.post(
-      Uri.parse(context.read<AppConfig>().appUrl + '/validate_username'),
-      body: {
-        'username': _usernameController.text,
-      },
-    );
-    if (response.statusCode == 204) {
-      return BoolFutureOutput.True;
-    } else {
-      _usernameTaken = true;
-      _formKey.currentState!.validate();
-      return BoolFutureOutput.False;
-    }
-  }
 }

@@ -31,9 +31,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   @override
   void initState() {
     super.initState();
-    User user = context.read<UserState>().user!;
-    _nicknameController = TextEditingController(text: user.username[0].toUpperCase() + user.username.substring(1));
-    _selectedCurrency = user.currency;
+    _selectedCurrency = context.read<UserState>().group.currency;
   }
 
   Future<BoolFutureOutput> _createGroup(String groupName, String nickname, String? currency) async {
@@ -41,14 +39,6 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
       Map<String, dynamic> body = {'group_name': groupName, 'currency': currency, 'member_nickname': nickname};
       http.Response response = await Http.post(uri: '/groups', body: body);
       Map<String, dynamic> decoded = jsonDecode(response.body);
-      UserState userProvider = context.read<UserState>();
-      userProvider.setGroups(
-          userProvider.user!.groups +
-              [
-                Group.fromJson(decoded)
-              ],
-          notify: false);
-      userProvider.setGroup(userProvider.user!.groups.last);
       return BoolFutureOutput.True;
     } catch (_) {
       throw _;

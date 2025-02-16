@@ -1,7 +1,5 @@
 import 'package:csocsort_szamla/components/helpers/currency_picker_dropdown.dart';
 import 'package:csocsort_szamla/components/helpers/gradient_button.dart';
-import 'package:csocsort_szamla/components/purchase/receipt_scanner/receipt_item_assigner.dart';
-import 'package:csocsort_szamla/helpers/color_generation.dart';
 import 'package:csocsort_szamla/helpers/currencies.dart';
 import 'package:csocsort_szamla/helpers/models.dart';
 import 'package:csocsort_szamla/helpers/validation_rules.dart';
@@ -12,14 +10,12 @@ class ReceiptInformationViewer extends StatelessWidget {
   final ReceiptInformation? receiptInformation;
   final bool editInformation;
   final void Function(VoidCallback) onInformationChanged;
-  final List<Member> members;
   final Map<int, Color> memberColors;
   const ReceiptInformationViewer({
     super.key,
     this.receiptInformation,
     required this.editInformation,
     required this.onInformationChanged,
-    required this.members,
     required this.memberColors,
   });
 
@@ -46,15 +42,6 @@ class ReceiptInformationViewer extends StatelessWidget {
                   'receipt-scanner.members'.tr(),
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
-                for (Member member in members)
-                  Container(
-                    padding: EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: memberColors[member.id],
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Text(member.nickname, style: TextStyle(color: determineTextColor(memberColors[member.id]!))),
-                  ),
               ],
             ),
           ),
@@ -250,18 +237,7 @@ class ReceiptInformationViewer extends StatelessWidget {
                                           Padding(
                                             padding: EdgeInsets.only(top: 5),
                                             child: IconButton.outlined(
-                                              onPressed: () => onInformationChanged(
-                                                () {
-                                                  if (receiptItem.assignedAmounts.isEmpty) {
-                                                    receiptItem.assignedAmounts = Map.fromIterables(
-                                                      members.map((e) => e.id),
-                                                      List.filled(members.length, 1),
-                                                    );
-                                                  } else {
-                                                    receiptItem.assignedAmounts.clear();
-                                                  }
-                                                },
-                                              ),
+                                              onPressed: () => {},
                                               padding: receiptItem.assignedAmounts.isEmpty ? EdgeInsets.zero : null,
                                               icon: receiptItem.assignedAmounts.isEmpty
                                                   ? Text(
@@ -273,38 +249,6 @@ class ReceiptInformationViewer extends StatelessWidget {
                                                   : Icon(Icons.clear),
                                             ),
                                           ),
-                                          for (Member member in members)
-                                            Padding(
-                                              padding: const EdgeInsets.only(right: 6),
-                                              child: ReceiptItemAssigner(
-                                                member: member,
-                                                color: memberColors[member.id]!,
-                                                surfaceColor: Theme.of(context).colorScheme.surfaceContainer,
-                                                sumQuantity: receiptItem.assignedAmounts.values.fold(
-                                                  0,
-                                                  (previousValue, element) => previousValue + element,
-                                                ),
-                                                assignedQuantity: receiptItem.assignedAmounts[member.id] ?? 0,
-                                                currency: receiptInformation!.currency,
-                                                intemValue: receiptItem.cost,
-                                                onAssign: () => onInformationChanged(() {
-                                                  if (receiptItem.assignedAmounts[member.id] == null) {
-                                                    receiptItem.assignedAmounts[member.id] = 1;
-                                                  } else {
-                                                    receiptItem.assignedAmounts[member.id] = receiptItem.assignedAmounts[member.id]! + 1;
-                                                  }
-                                                }),
-                                                onUnassign: (bool completely) => onInformationChanged(() {
-                                                  if (receiptItem.assignedAmounts[member.id] != null) {
-                                                    if (completely || receiptItem.assignedAmounts[member.id] == 1) {
-                                                      receiptItem.assignedAmounts.remove(member.id);
-                                                    } else {
-                                                      receiptItem.assignedAmounts[member.id] = receiptItem.assignedAmounts[member.id]! - 1;
-                                                    }
-                                                  }
-                                                }),
-                                              ),
-                                            ),
                                         ],
                                       ),
                                     )

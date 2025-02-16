@@ -1,40 +1,31 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:collection/collection.dart';
 import 'package:connectivity_widget/connectivity_widget.dart';
-import 'package:csocsort_szamla/components/groups/dialogs/share_group_dialog.dart';
 import 'package:csocsort_szamla/components/groups/group_info.dart';
 import 'package:csocsort_szamla/components/helpers/drawer_tile.dart';
 import 'package:csocsort_szamla/components/history/history.dart';
 import 'package:csocsort_szamla/components/main/main_dialog_builder.dart';
 import 'package:csocsort_szamla/components/main/main_speed_dial.dart';
 import 'package:csocsort_szamla/components/main/statistics_export_card.dart';
-import 'package:csocsort_szamla/components/shopping/shopping_list.dart';
 import 'package:csocsort_szamla/helpers/app_theme.dart';
 import 'package:csocsort_szamla/helpers/event_bus.dart';
-import 'package:csocsort_szamla/helpers/providers/app_config_provider.dart';
 import 'package:csocsort_szamla/helpers/providers/app_theme_provider.dart';
 import 'package:csocsort_szamla/helpers/providers/screen_width_provider.dart';
 import 'package:csocsort_szamla/helpers/providers/user_provider.dart';
 import 'package:csocsort_szamla/pages/app/create_group_page.dart';
 import 'package:csocsort_szamla/pages/app/customize_page.dart';
-import 'package:csocsort_szamla/pages/app/join_group_page.dart';
-import 'package:csocsort_szamla/pages/app/store_page.dart';
 import 'package:csocsort_szamla/pages/app/user_settings_page.dart';
 import 'package:csocsort_szamla/pages/auth/login_or_register_page.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:http/http.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../components/balance/balances.dart';
 import '../../components/helpers/ad_unit.dart';
 import '../../components/helpers/error_message.dart';
 import '../../components/main/dialogs/iapp_not_supported_dialog.dart';
-import '../../components/main/dialogs/trial_version_dialog.dart';
 import '../../helpers/currencies.dart';
 import '../../helpers/http.dart';
 import '../../helpers/models.dart';
@@ -67,8 +58,7 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
   SharedPreferences? prefs;
   Future<List<Group>>? _groups;
-  Future<dynamic>? _sumBalance;
-  Future<String>? _invitation;
+  dynamic _sumBalance = 0;
 
   TabController? _tabController;
   int _selectedIndex = 0;
@@ -85,21 +75,17 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
     if (!this.mounted) {
       return [];
     }
-    Response response = await Http.get(uri: generateUri(GetUriKeys.groups, context), overwriteCache: true);
-    Map<String, dynamic> decoded = jsonDecode(response.body);
     UserState userProvider = context.read<UserState>();
     List<Group> groups = [];
-    for (var group in decoded['data']) {
-      groups.add(Group(
-        name: group['group_name'],
-        id: group['group_id'],
-        currency: Currency.fromCode(group['currency']),
-      ));
-    }
-    userProvider.setGroups(groups, notify: false);
+    groups.add(Group(
+      name: "group 1",
+      id: 1,
+      currency: Currency.fromCode('HUF'),
+    ));
+    //userProvider.setGroups(groups, notify: false);
     //The group ID cannot change, but the group name and currency can change
     Group? group = groups.firstWhereOrNull(
-      (group) => (group.id == userProvider.currentGroup!.id && (group.name != userProvider.currentGroup!.name || group.currency != userProvider.currentGroup!.currency)),
+      (group) => (group.id == userProvider.group!.id && (group.name != userProvider.group!.name || group.currency != userProvider.group!.currency)),
     ); // Only notify if the current group's name or currency changed
     if (group != null) {
       userProvider.setGroup(group);
@@ -107,31 +93,16 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
     return groups;
   }
 
-  Future<dynamic> _getSumBalance() async {
-    try {
-      Response response = await Http.get(uri: generateUri(GetUriKeys.userBalanceSum, context));
-      Map<String, dynamic> decoded = jsonDecode(response.body);
-      return decoded['data'];
-    } catch (_) {
-      throw _;
-    }
+  dynamic _getSumBalance() {
+    return 0;
   }
 
-  Future<String> _getInvitation() async {
-    try {
-      Response response = await Http.get(
-        uri: generateUri(GetUriKeys.groupCurrent, context),
-        useCache: false,
-      );
-      Map<String, dynamic> decoded = jsonDecode(response.body);
-      return decoded['data']['invitation'];
-    } catch (_) {
-      throw _;
-    }
+  String _getInvitation(){
+    return "";
   }
 
   List<Widget> _generateListTiles(List<Group> groups) {
-    int currentGroupId = context.watch<UserState>().user!.group!.id;
+    int currentGroupId = context.watch<UserState>().group!.id;
     final theme = Theme.of(context);
     return groups
         .map<Widget>((group) => Padding(
@@ -182,7 +153,6 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
 
   void onRefreshGroupInfoEvent() {
     setState(() {
-      _invitation = _getInvitation();
     });
   }
 
@@ -194,7 +164,6 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
     _tabController = TabController(length: 2, vsync: this, initialIndex: widget.selectedIndex);
     _groups = _getGroups();
     _sumBalance = _getSumBalance();
-    _invitation = _getInvitation();
     final bus = EventBus.instance;
     bus.register(EventBus.refreshBalances, onRefreshBalancesEvent);
     bus.register(EventBus.refreshGroups, onRefreshGroupsEvent);
@@ -222,23 +191,6 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
     }
   }
 
-  Widget _invitationButton() {
-    return FutureBuilder(
-        future: _invitation,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
-            return IconButton(
-              onPressed: () => showDialog(
-                context: context,
-                builder: (context) => ShareGroupDialog(inviteCode: snapshot.data!),
-              ),
-              icon: Icon(Icons.share),
-            );
-          }
-          return Container();
-        });
-  }
-
   @override
   Widget build(BuildContext context) {
     bool isMobile = context.watch<ScreenSize>().isMobile;
@@ -252,16 +204,9 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
         Scaffold(
           key: _scaffoldKey,
           appBar: AppBar(
-            leading: !isMobile
-                ? IconButton(
-                    onPressed: _handleDrawer,
-                    icon: Icon(Icons.menu),
-                  )
-                : _invitationButton(),
-            actions: [if (!isMobile) _invitationButton()],
             centerTitle: true,
             title: Text(
-              context.watch<UserState>().user!.group?.name ?? '',
+              context.watch<UserState>().group?.name ?? '',
               style: TextStyle(letterSpacing: 0.25, fontSize: 24),
             ),
           ),
@@ -365,7 +310,6 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Balances(),
               History(
                 selectedIndex: widget.selectedHistoryIndex,
               ),
@@ -376,7 +320,6 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
           ),
         ),
       ),
-      ShoppingList(),
     ];
   }
 
@@ -410,10 +353,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                           'title'.tr().toUpperCase(),
                           style: Theme.of(context).textTheme.headlineSmall!.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
                         ),
-                        Text(
-                          'hi'.tr(args: [appStateProvider.user!.username]),
-                          style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Theme.of(context).colorScheme.primary),
-                        ),
+                        
                       ],
                     ),
                   ),
@@ -459,11 +399,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                       );
                     },
                   ),
-                  DrawerTile(
-                    icon: Icons.group_add,
-                    label: 'join_group'.tr(),
-                    builder: (context) => JoinGroupPage(),
-                  ),
+                 
                   DrawerTile(
                     icon: Icons.library_add,
                     label: 'create_group'.tr(),
@@ -497,13 +433,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                 ),
                 dense: true,
                 onTap: () {
-                  if (appStateProvider.user!.trialVersion) {
-                    showDialog(builder: (context) => TrialVersionDialog(), context: context);
-                  } else if (!context.read<AppConfig>().isIAPPlatformEnabled) {
-                    showDialog(builder: (context) => IAPNotSupportedDialog(), context: context);
-                  } else {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => StorePage()));
-                  }
+                  showDialog(builder: (context) => IAPNotSupportedDialog(), context: context);
                 },
                 leading: ColorFiltered(
                   colorFilter: ColorFilter.mode(Theme.of(context).colorScheme.onSurfaceVariant, BlendMode.srcIn),
@@ -512,15 +442,6 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                     width: 25,
                   ),
                 ),
-                subtitle: appStateProvider.user!.trialVersion
-                    ? Text(
-                        'trial_version'.tr().toUpperCase(),
-                        style: Theme.of(context).textTheme.labelSmall!.copyWith(color: Theme.of(context).colorScheme.secondary),
-                      )
-                    : Text(
-                        'in_app_purchase_description'.tr(),
-                        style: Theme.of(context).textTheme.labelLarge!.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-                      ),
                 title: Text(
                   'in_app_purchase'.tr(),
                   style: Theme.of(context).textTheme.labelLarge!.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
@@ -568,16 +489,6 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
               icon: Icons.account_circle,
               label: 'profile'.tr(),
               builder: (context) => UserSettingsPage(),
-            ),
-            Divider(),
-            DrawerTile(
-              dense: true,
-              label: 'logout'.tr(),
-              icon: Icons.exit_to_app,
-              onTap: () async {
-                context.read<UserState>().logout();
-                Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => LoginOrRegisterPage()), (r) => false);
-              },
             ),
           ],
         ),

@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../helpers/models.dart';
-
 class CustomChoiceChip extends StatefulWidget {
-  final Member member;
   final Color selectedColor;
   final Color notSelectedColor;
   final Color selectedFontColor;
@@ -16,7 +13,6 @@ class CustomChoiceChip extends StatefulWidget {
   final bool showCheck;
   final bool showAnimation;
   CustomChoiceChip({
-    required this.member,
     required this.selected,
     required this.selectedColor,
     required this.notSelectedColor,
@@ -123,11 +119,6 @@ class _CustomChoiceChipState extends State<CustomChoiceChip>
                     ? CrossFadeState.showSecond
                     : CrossFadeState.showFirst,
               ),
-              Text(widget.member.nickname,
-                  style: Theme.of(context).textTheme.labelLarge!.copyWith(
-                      color: widget.selected
-                          ? widget.selectedFontColor
-                          : widget.notSelectedFontColor)),
             ],
           ),
         ),

@@ -21,7 +21,7 @@ class CurrencyPickerIconButton extends StatefulWidget {
 class _CurrencyPickerIconButtonState extends State<CurrencyPickerIconButton> {
   @override
   Widget build(BuildContext context) {
-    Currency groupCurrency = context.watch<UserState>().currentGroup!.currency;
+    Currency groupCurrency = context.watch<UserState>().group!.currency;
     return IconButton.filledTonal(
       isSelected: widget.selectedCurrency != groupCurrency,
       onPressed: () {
