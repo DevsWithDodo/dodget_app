@@ -68,9 +68,9 @@ class _HistoryPageState extends State<HistoryPage>
       DateTime now = DateTime.now();
       DateTime date = DateTime(now.year, now.month, now.day);
       for (Purchase purchase in purchaseData) {
-        if (date.difference(purchase.updatedAt).inDays > 7) {
+        if (date.difference(purchase.date).inDays > 7) {
           int toSubtract =
-              (date.difference(purchase.updatedAt).inDays / 7).floor();
+              (date.difference(purchase.date).inDays / 7).floor();
           date = date.subtract(Duration(days: toSubtract * 7));
           grouped[date] = [];
           grouped[date]!.add(purchase);

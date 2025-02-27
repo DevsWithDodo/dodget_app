@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'dart:core';
 import 'dart:io';
+import 'dart:async';
 
+import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:collection/collection.dart';
 import 'package:csocsort_szamla/helpers/currencies.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -51,7 +54,7 @@ class Purchase {
   double amount;
   String name;
   Currency currency;
-  DateTime updatedAt;
+  DateTime date;
   Category category;
 
   Purchase({
@@ -59,16 +62,42 @@ class Purchase {
     required this.name,
     required this.amount,
     required this.currency,
-    required this.updatedAt,
+    required this.date,
     required this.category,
   }) {
+  }
+
+  Map<String, Object?> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'amount': amount,
+      'date': date.toIso8601String(),
+      'currency': currency.code,
+      'category': category.text,
+    };
+  }
+  static Purchase fromMap(Map<String, dynamic> map) {
+    return Purchase(
+      id: map['id'],
+      name: map['name'],
+      amount: map['total_amount'],
+      date: DateTime.parse(map['updated_at']),
+      currency: Currency.fromCode(map['original_currency']),
+      category: Category.fromName(map['category']),
+    );
+  }
+
+  @override
+  String toString() {
+    return 'Purchase{id: $id, name: $name, amount: $amount, currency: $currency, date: $date, category: $category}';
   }
 
   factory Purchase.fromJson(Map<String, dynamic> json) {
     return Purchase(
       id: json['purchase_id'],
       name: json['name'],
-      updatedAt: json['updated_at'] == null ? DateTime.now() : DateTime.parse(json['updated_at']).toLocal(),
+      date: json['updated_at'] == null ? DateTime.now() : DateTime.parse(json['updated_at']).toLocal(),
       currency: Currency.fromCode(json['original_currency']),
       amount: (json['total_amount'] * 1.0),
       category: Category.fromName(json["category"]),
@@ -79,7 +108,7 @@ class Purchase {
     return Purchase(
       id: 0,
       name: name,
-      updatedAt: DateTime.now(),
+      date: DateTime.now(),
       currency: currency,
       amount: amount,
       category: category

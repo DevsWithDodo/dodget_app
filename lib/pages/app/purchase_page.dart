@@ -1,29 +1,19 @@
 import 'dart:async';
-import 'dart:convert';
 
-import 'package:csocsort_szamla/common.dart';
 import 'package:csocsort_szamla/components/helpers/ad_unit.dart';
 import 'package:csocsort_szamla/components/helpers/calculator.dart';
 import 'package:csocsort_szamla/components/helpers/category_picker_icon_button.dart';
 import 'package:csocsort_szamla/components/helpers/currency_picker_icon_button.dart';
-import 'package:csocsort_szamla/components/helpers/custom_choice_chip.dart';
-import 'package:csocsort_szamla/components/helpers/error_message.dart';
 import 'package:csocsort_szamla/components/helpers/future_output_dialog.dart';
-import 'package:csocsort_szamla/components/helpers/gradient_button.dart';
-import 'package:csocsort_szamla/components/purchase/custom_amount_field.dart';
-import 'package:csocsort_szamla/helpers/amount_division.dart';
 import 'package:csocsort_szamla/helpers/currencies.dart';
 import 'package:csocsort_szamla/helpers/event_bus.dart';
-import 'package:csocsort_szamla/helpers/http.dart';
 import 'package:csocsort_szamla/helpers/models.dart';
 import 'package:csocsort_szamla/helpers/providers/user_provider.dart';
 import 'package:csocsort_szamla/helpers/validation_rules.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:http/http.dart';
+import 'package:logger/web.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showcaseview/showcaseview.dart';
@@ -41,15 +31,14 @@ class _PurchasePageState extends State<PurchasePage> {
   _PurchasePageState() : super();
 
   var _formKey = GlobalKey<FormState>();
-  ExpandableController _expandableController = ExpandableController();
-  bool useCustomAmounts = false;
 
   TextEditingController amountController = TextEditingController();
   TextEditingController noteController = TextEditingController();
-  late AmountDivision amountDivision;
+  TextEditingController dateController = TextEditingController();
   late Currency selectedCurrency;
   Category? selectedCategory;
   late int purchaserId;
+  DateTime date = DateTime.now();
   CrossFadeState purchaserCrossFadeState = CrossFadeState.showFirst;
   bool saveInitialized = false;
 
@@ -59,45 +48,17 @@ class _PurchasePageState extends State<PurchasePage> {
 
   ReceiptInformation? receiptInformation;
 
-  Future<BoolFutureOutput> _postPurchase() async {
-    try {
-      Map<String, dynamic> body = {
-        "name": noteController.text,
-        "group": context.read<UserState>().group!.id,
-        "amount": amountDivision.totalAmount,
-        "currency": selectedCurrency,
-        "category": selectedCategory != null ? selectedCategory!.text : null,
-        "buyer_id": purchaserId,
-        "receivers": amountDivision.generateReceivers(useCustomAmounts),
-      };
-      if (widget.purchase != null) {
-        await Http.put(uri: '/purchases/${widget.purchase!.id}', body: body);
-      } else {
-        await Http.post(uri: '/purchases', body: body);
-      }
-      return BoolFutureOutput.True;
-    } catch (_) {
-      throw _;
-    }
-  }
-
   @override
   void initState() {
     super.initState();
     selectedCurrency = context.read<UserState>().group!.currency;
-    amountDivision = AmountDivision(
-      amounts: [],
-      currency: selectedCurrency,
-      setState: () => setState(() {}),
-    );
 
     if (widget.purchase != null) {
       noteController.text = widget.purchase!.name;
       amountController.text = widget.purchase!.amount.toMoneyString(widget.purchase!.currency);
       selectedCurrency = widget.purchase!.currency;
       selectedCategory = widget.purchase!.category;
-      amountDivision = AmountDivision.fromPurchase(widget.purchase!, () => setState(() {}));
-      useCustomAmounts = false;
+      date = widget.purchase!.date;
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -193,7 +154,6 @@ class _PurchasePageState extends State<PurchasePage> {
                                     selectedCurrency: selectedCurrency,
                                     onCurrencyChanged: (newCurrency) => setState(() {
                                       selectedCurrency = newCurrency ?? selectedCurrency;
-                                      amountDivision.setCurrency(selectedCurrency);
                                     }),
                                   ),
                                 ),
@@ -213,7 +173,6 @@ class _PurchasePageState extends State<PurchasePage> {
                                   onChanged: (value) => setState(() {
                                     double? parsedTotal = double.tryParse(value.replaceAll(',', '.'));
                                     if (parsedTotal != null && parsedTotal > 0) {
-                                      amountDivision.setTotal(parsedTotal);
                                     }
                                   }),
                                 ),
@@ -238,7 +197,6 @@ class _PurchasePageState extends State<PurchasePage> {
                                                   selectedCurrency,
                                                 );
                                                 if (value != null && value > 0) {
-                                                  amountDivision.setTotal(value);
                                                 }
                                               });
                                             },
@@ -260,105 +218,6 @@ class _PurchasePageState extends State<PurchasePage> {
                               ),
                             ],
                           ),
-                          SizedBox(height: 20),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'to_who'.plural(2),
-                                style: Theme.of(context).textTheme.labelLarge,
-                              ),
-                              IconButton(
-                                onPressed: () => setState(() {
-                                  _expandableController.expanded = !_expandableController.expanded;
-                                }),
-                                icon: Icon(
-                                  Icons.info_outline,
-                                  color: _expandableController.expanded ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 5),
-                          Expandable(
-                            controller: _expandableController,
-                            collapsed: Container(),
-                            expanded: Center(
-                              child: Column(
-                                children: [
-                                  Text(
-                                    'add_purchase_explanation'.tr(),
-                                    textAlign: TextAlign.center,
-                                    style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                                          color: Theme.of(context).colorScheme.onSurface,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                          if (!useCustomAmounts && amountDivision.amounts.isNotEmpty)
-                            Center(
-                              child: Text(
-                                'per_person'.tr(
-                                  args: [
-                                    (amountDivision.totalAmount / amountDivision.amounts.length).toMoneyString(
-                                      selectedCurrency,
-                                      withSymbol: true,
-                                    )
-                                  ],
-                                ),
-                              ),
-                            ),
-                          SizedBox(height: 10),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'purchase.page.custom-amount.switch'.tr(),
-                                style: Theme.of(context).textTheme.labelLarge,
-                              ),
-                              Switch(
-                                value: useCustomAmounts,
-                                onChanged: (value) {
-                                  double? totalAmount = double.tryParse(amountController.text.replaceAll(',', '.'));
-                                  if (totalAmount == null || totalAmount <= 0) {
-                                    showToast('purchase.page.custom-amount.toast.no-amount-given'.tr());
-                                    setState(() => useCustomAmounts = false);
-                                    return;
-                                  }
-                                  setState(() => useCustomAmounts = value);
-                                },
-                              ),
-                            ],
-                          ),
-                          if (useCustomAmounts)
-                            Center(
-                              child: Padding(
-                                padding: EdgeInsets.only(top: 10, bottom: 20),
-                                child: Text(
-                                  'purchase.page.custom-amount.hint'.tr(),
-                                  style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                      ),
-                                ),
-                              ),
-                            ),
-                          AnimatedCrossFade(
-                            crossFadeState: !useCustomAmounts ? CrossFadeState.showFirst : CrossFadeState.showSecond,
-                            duration: Duration(milliseconds: 300),
-                            firstChild: Container(),
-                            secondChild: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: amountDivision.amounts.map((PurchaseReceiver amount) {
-                                return CustomAmountField(
-                                  amount: amount,
-                                  currency: selectedCurrency,
-                                );
-                              }).toList(),
-                            ),
-                          ),
                           SizedBox(height: 50),
                         ],
                       ),
@@ -378,26 +237,25 @@ class _PurchasePageState extends State<PurchasePage> {
           child: Icon(Icons.send, color: Theme.of(context).colorScheme.onTertiary),
           onPressed: () => submit(context),
         ),
-      ),
+      )
     );
   }
 
   void submit(BuildContext context) {
     FocusScope.of(context).unfocus();
-    if (_formKey.currentState!.validate() && (!useCustomAmounts || amountDivision.isValid(true))) {
-      if (amountDivision.amounts.isEmpty) {
-        FToast ft = FToast();
-        ft.init(context);
-        ft.showToast(
-          child: errorToast('person_not_chosen', context),
-          toastDuration: Duration(seconds: 2),
-          gravity: ToastGravity.BOTTOM,
-        );
-        return;
-      }
+    if (_formKey.currentState!.validate()) {
+      Purchase newPurchase = Purchase(
+        id: -1, 
+        name: noteController.text, 
+        amount: double.tryParse(amountController.value.text) ?? 0.0,
+        currency: selectedCurrency, 
+        date: date,
+        category: selectedCategory ?? Category.fromName('other')
+      );
+
       showFutureOutputDialog(
         context: context,
-        future: _postPurchase(),
+        future: _insertPurchase(widget.purchase, newPurchase),
         outputCallbacks: {
           BoolFutureOutput.True: () {
             Navigator.pop(context);
@@ -408,6 +266,21 @@ class _PurchasePageState extends State<PurchasePage> {
           }
         },
       );
+    }
+  }
+
+  Future<BoolFutureOutput> _insertPurchase(Purchase? oldPurchase, Purchase newPurchase) async {
+    try {
+      var logger = Logger();
+      logger.d("inserting purchase: $newPurchase");
+
+      if(oldPurchase == null){
+        return BoolFutureOutput.True;
+      } else {
+        return BoolFutureOutput.False;
+      }
+    } catch (_) {
+      throw _;
     }
   }
 }

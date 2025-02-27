@@ -120,7 +120,7 @@ class _PurchaseAllInfoState extends State<PurchaseAllInfo> {
                 ),
                 Flexible(
                   child: Text(
-                    DateFormat.yMd(context.locale.languageCode).add_Hm().format(widget.purchase.updatedAt),
+                    DateFormat.yMd(context.locale.languageCode).add_Hm().format(widget.purchase.date),
                   ),
                 ),
               ],
