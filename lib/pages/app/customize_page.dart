@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:csocsort_szamla/components/helpers/ad_unit.dart';
 import 'package:csocsort_szamla/components/user_settings/cards/change_language.dart';
 import 'package:csocsort_szamla/components/user_settings/components/theme_picker.dart';
 import 'package:csocsort_szamla/helpers/providers/screen_width_provider.dart';
@@ -88,7 +87,6 @@ class _CustomizePageState extends State<CustomizePage> {
                         ],
                       ),
                     ),
-                  AdUnit(site: 'settings'),
                 ],
               ),
             ),

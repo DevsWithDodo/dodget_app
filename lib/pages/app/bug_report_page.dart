@@ -1,4 +1,3 @@
-import 'package:csocsort_szamla/components/helpers/ad_unit.dart';
 import 'package:csocsort_szamla/components/helpers/future_output_dialog.dart';
 import 'package:csocsort_szamla/helpers/http.dart';
 import 'package:csocsort_szamla/helpers/validation_rules.dart';
@@ -128,10 +127,6 @@ class _BugReportPageState extends State<BugReportPage> {
                     ),
                   ],
                 ),
-              ),
-              Visibility(
-                visible: MediaQuery.of(context).viewInsets.bottom == 0,
-                child: AdUnit(site: 'report_bug'),
               ),
             ],
           ),

@@ -1,4 +1,3 @@
-import 'package:csocsort_szamla/components/helpers/ad_unit.dart';
 import 'package:csocsort_szamla/components/user_settings/cards/about_us.dart';
 import 'package:csocsort_szamla/components/user_settings/cards/change_user_currency.dart';
 import 'package:csocsort_szamla/components/user_settings/cards/delete_all_data.dart';
@@ -63,7 +62,6 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                   ],
                 ),
               ),
-            AdUnit(site: 'settings'),
           ],
         ),
       ),

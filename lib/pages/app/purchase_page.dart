@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:csocsort_szamla/components/helpers/ad_unit.dart';
 import 'package:csocsort_szamla/components/helpers/calculator.dart';
 import 'package:csocsort_szamla/components/helpers/category_picker_icon_button.dart';
 import 'package:csocsort_szamla/components/helpers/currency_picker_icon_button.dart';
@@ -9,6 +8,7 @@ import 'package:csocsort_szamla/helpers/currencies.dart';
 import 'package:csocsort_szamla/helpers/event_bus.dart';
 import 'package:csocsort_szamla/helpers/models.dart';
 import 'package:csocsort_szamla/helpers/providers/user_provider.dart';
+import 'package:csocsort_szamla/helpers/repository.dart';
 import 'package:csocsort_szamla/helpers/validation_rules.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -225,10 +225,6 @@ class _PurchasePageState extends State<PurchasePage> {
                   ),
                 ),
               ),
-              Visibility(
-                visible: MediaQuery.of(context).viewInsets.bottom == 0,
-                child: AdUnit(site: 'purchase'),
-              ),
             ],
           ),
         ),
@@ -273,8 +269,10 @@ class _PurchasePageState extends State<PurchasePage> {
     try {
       var logger = Logger();
       logger.d("inserting purchase: $newPurchase");
+      final purchaseRepo = context.read<PurchaseRepository>();
 
       if(oldPurchase == null){
+        await purchaseRepo.insert(newPurchase);
         return BoolFutureOutput.True;
       } else {
         return BoolFutureOutput.False;

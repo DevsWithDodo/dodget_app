@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:collection/collection.dart';
-import 'package:connectivity_widget/connectivity_widget.dart';
 import 'package:csocsort_szamla/components/groups/group_info.dart';
 import 'package:csocsort_szamla/components/helpers/drawer_tile.dart';
 import 'package:csocsort_szamla/components/history/history.dart';
@@ -16,14 +15,12 @@ import 'package:csocsort_szamla/helpers/providers/user_provider.dart';
 import 'package:csocsort_szamla/pages/app/create_group_page.dart';
 import 'package:csocsort_szamla/pages/app/customize_page.dart';
 import 'package:csocsort_szamla/pages/app/user_settings_page.dart';
-import 'package:csocsort_szamla/pages/auth/login_or_register_page.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../components/helpers/ad_unit.dart';
 import '../../components/helpers/error_message.dart';
 import '../../components/main/dialogs/iapp_not_supported_dialog.dart';
 import '../../helpers/currencies.dart';
@@ -243,24 +240,6 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
               onReturn: () => EventBus.instance.fire(EventBus.refreshMainDialog),
             ),
           ),
-          body: kIsWeb
-              ? _body(true)
-              : ConnectivityWidget(
-                  offlineBanner: Container(
-                    padding: EdgeInsets.all(8),
-                    width: double.infinity,
-                    color: Theme.of(context).colorScheme.error,
-                    child: Text(
-                      'no_connection'.tr(),
-                      style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onError, fontWeight: FontWeight.bold),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  builder: (context, isOnline) => ChangeNotifierProvider(
-                    create: (_) => IsOnlineProvider(isOnline: isOnline),
-                    child: _body(isOnline),
-                  ),
-                ),
         ),
         MainDialogBuilder(context: context),
       ],
@@ -284,7 +263,6 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                   children: tabWidgets.map((child) => Expanded(child: child)).toList(),
                 ),
         ),
-        AdUnit(site: 'home_screen'),
       ],
     );
   }

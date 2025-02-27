@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:csocsort_szamla/components/helpers/ad_unit.dart';
 import 'package:csocsort_szamla/components/helpers/error_message.dart';
 import 'package:csocsort_szamla/components/history/history_filter.dart';
 import 'package:csocsort_szamla/components/payment/payment_entry.dart';
@@ -303,10 +302,6 @@ class _HistoryPageState extends State<HistoryPage>
                       ),
                     ],
                   ),
-          ),
-          Visibility(
-            visible: MediaQuery.of(context).viewInsets.bottom == 0,
-            child: AdUnit(site: 'history'),
           ),
         ],
       ),
