@@ -489,13 +489,13 @@ class AppTheme {
     }    
 
     ThemeData data = ThemeData.from(colorScheme: colorScheme, useMaterial3: true).copyWith(
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15),
         ),
         margin: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
       ),
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: colorScheme.surfaceContainerHigh, // Temporary fix
       ),
       bottomSheetTheme: BottomSheetThemeData(
@@ -515,7 +515,7 @@ class AppTheme {
       ),
     );
     if (newColorScheme != null) {
-      data = data.copyWith(colorScheme: newColorScheme, scaffoldBackgroundColor: newColorScheme.surface, dialogTheme: DialogTheme(
+      data = data.copyWith(colorScheme: newColorScheme, scaffoldBackgroundColor: newColorScheme.surface, dialogTheme: DialogThemeData(
         backgroundColor: newColorScheme.surfaceContainerHigh, // Temporary fix
       ));
     }
@@ -569,7 +569,7 @@ class AppTheme {
         colorScheme: lightScheme,
         useMaterial3: true,
       ).copyWith(
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           color: lightScheme.surfaceContainerLow,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
@@ -593,7 +593,7 @@ class AppTheme {
         colorScheme: darkScheme.copyWith(brightness: Brightness.dark),
         useMaterial3: true,
       ).copyWith(
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           color: darkScheme.surfaceContainerLow,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),

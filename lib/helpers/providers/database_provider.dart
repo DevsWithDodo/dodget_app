@@ -15,13 +15,70 @@ class DatabaseProvider {
     WidgetsFlutterBinding.ensureInitialized();
     
     return openDatabase(
-      join(await getDatabasesPath(), 'your_database.db'),
+      join(await getDatabasesPath(), 'dodget.db'),
       onCreate: (db, version) async {
+        // Create categories table
         await db.execute('''
-          CREATE TABLE purchases(id INTEGER PRIMARY KEY, name TEXT, amount FLOAT, date TEXT, currency TEXT, category TEXT)
+          CREATE TABLE categories(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL
+          )
         ''');
+        
+        // Create transactions table
+        await db.execute('''
+          CREATE TABLE transactions(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            price NUMERIC NOT NULL,
+            date TEXT NOT NULL,
+            recurring_months INTEGER,
+            recurring_until TEXT,
+            currency TEXT NOT NULL,
+            category_id INTEGER NOT NULL,
+            name TEXT,
+            FOREIGN KEY (category_id) REFERENCES categories(id)
+          )
+        ''');
+        
+        // Create indexes for better query performance
+        await db.execute('''
+          CREATE INDEX idx_transactions_date ON transactions(date)
+        ''');
+        
+        await db.execute('''
+          CREATE INDEX idx_transactions_category ON transactions(category_id)
+        ''');
+        
+        // Insert default categories
+        await _insertDefaultCategories(db);
       },
       version: 1,
     );
+  }
+  
+  Future<void> _insertDefaultCategories(Database db) async {
+    final categories = [
+      'Transport',
+      'Groceries',
+      'Gifts',
+      'Donation',
+      'Restaurants',
+      'Home',
+      'Decoration',
+      'Entertainment',
+      'Party',
+      'Tax',
+      'Clothes',
+      'Travel',
+      'Invoices',
+      'Tools',
+      'Health',
+      'Sport',
+      'Other',
+    ];
+    
+    for (var category in categories) {
+      await db.insert('categories', {'name': category});
+    }
   }
 }

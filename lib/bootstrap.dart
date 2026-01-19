@@ -23,14 +23,16 @@ class Bootstrap extends StatefulWidget {
 class _BootstrapState extends State<Bootstrap> {
   late Future<SharedPreferences> _prefs;
   late DatabaseProvider databaseProvider;
-  late PurchaseRepository purchaseRepository;
+  late TransactionRepository transactionRepository;
+  late CategoryRepository categoryRepository;
 
   @override
   void initState() {
     super.initState();
     _prefs = SharedPreferences.getInstance();
     databaseProvider = DatabaseProvider();
-    purchaseRepository = PurchaseRepository(databaseProvider);
+    transactionRepository = TransactionRepository(databaseProvider);
+    categoryRepository = CategoryRepository(databaseProvider);
   }
 
   @override
@@ -49,7 +51,8 @@ class _BootstrapState extends State<Bootstrap> {
               builder: (context) => 
               MultiProvider(providers: [
                 Provider(create: (_) => DatabaseProvider()),
-                Provider(create: (context) => PurchaseRepository(context.read<DatabaseProvider>())),
+                Provider(create: (context) => TransactionRepository(context.read<DatabaseProvider>())),
+                Provider(create: (context) => CategoryRepository(context.read<DatabaseProvider>())),
               ],
               child: ExchangeRateInitializer(
                   context: context,
