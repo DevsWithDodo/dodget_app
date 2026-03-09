@@ -1,5 +1,6 @@
 {
     "cmake.sourceDirectory": "C:/Users/sszajbely/FlutterProjects/lender_app/build/windows/_deps/nuget-subbuild",
     "cmake.configureOnOpen": true,
-    "julia.environmentPath": "c:\\Users\\sszajbely\\FlutterProjects\\lender_app"
+    "julia.environmentPath": "c:\\Users\\sszajbely\\FlutterProjects\\lender_app",
+    "java.configuration.updateBuildConfiguration": "interactive"
 }

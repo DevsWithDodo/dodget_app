@@ -2,7 +2,6 @@ import 'package:csocsort_szamla/app.dart';
 import 'package:csocsort_szamla/helpers/initializers/supported_version_initializer.dart';
 import 'package:csocsort_szamla/helpers/providers/app_config_provider.dart';
 import 'package:csocsort_szamla/helpers/providers/database_provider.dart';
-import 'package:csocsort_szamla/helpers/providers/user_provider.dart';
 import 'package:csocsort_szamla/helpers/providers/app_theme_provider.dart';
 import 'package:csocsort_szamla/helpers/initializers/exchange_rate_initializer.dart';
 import 'package:csocsort_szamla/helpers/providers/screen_width_provider.dart';
@@ -23,14 +22,16 @@ class Bootstrap extends StatefulWidget {
 class _BootstrapState extends State<Bootstrap> {
   late Future<SharedPreferences> _prefs;
   late DatabaseProvider databaseProvider;
-  late PurchaseRepository purchaseRepository;
+  late TransactionRepository transactionRepository;
+  late CategoryRepository categoryRepository;
 
   @override
   void initState() {
     super.initState();
     _prefs = SharedPreferences.getInstance();
     databaseProvider = DatabaseProvider();
-    purchaseRepository = PurchaseRepository(databaseProvider);
+    transactionRepository = TransactionRepository(databaseProvider);
+    categoryRepository = CategoryRepository(databaseProvider);
   }
 
   @override
@@ -49,13 +50,12 @@ class _BootstrapState extends State<Bootstrap> {
               builder: (context) => 
               MultiProvider(providers: [
                 Provider(create: (_) => DatabaseProvider()),
-                Provider(create: (context) => PurchaseRepository(context.read<DatabaseProvider>())),
+                Provider(create: (context) => TransactionRepository(context.read<DatabaseProvider>())),
+                Provider(create: (context) => CategoryRepository(context.read<DatabaseProvider>())),
               ],
               child: ExchangeRateInitializer(
                   context: context,
-                  builder: (context) => UserProvider(
-                    context: context,
-                    builder: (context) => ScreenSizeProvider(
+                  builder: (context) => ScreenSizeProvider(
                         builder: (context) => EasyLocalization(
                           child: ShowCaseWidget(
                             builder: (context) => SupportedVersionInitializer(
@@ -71,7 +71,6 @@ class _BootstrapState extends State<Bootstrap> {
                         ),
                     ),
                   ),
-                ),
               ),
             ),
           );

@@ -1,6 +1,5 @@
 import 'package:csocsort_szamla/helpers/navigator_service.dart';
 import 'package:csocsort_szamla/helpers/providers/app_theme_provider.dart';
-import 'package:csocsort_szamla/helpers/providers/user_provider.dart';
 import 'package:csocsort_szamla/main.dart';
 import 'package:csocsort_szamla/pages/app/main_page.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -13,7 +12,6 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var userState = context.watch<UserState>();
     var link = "";
     return MaterialApp(
       debugShowCheckedModeBanner: false,
